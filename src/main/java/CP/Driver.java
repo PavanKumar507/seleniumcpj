@@ -28,7 +28,7 @@ public class Driver {
     private ITestContext testContext;
 
     public static final String DOWNLOADS_DIR = "C:\\Temp\\";
-    public static final String SCREENSHOTS_DIR = "C:\\Temp\\Screenshots";
+    public static final String SCREENSHOTS_DIR = ".\\Screenshots";
 
     public static void Initialize(DriverInitializeOptions options)
     {
