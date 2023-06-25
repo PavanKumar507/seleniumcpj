@@ -9,7 +9,7 @@ import org.testng.annotations.Test;
 
 public class HomePageTests extends TestFixture {
 
-    @Test {"ID=12"}
+    @Test (testName = "PK-01")
     public void HomePageLoginTest() {
 
         HomePage.GoTo();
