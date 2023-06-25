@@ -1,5 +1,9 @@
 package CP;
 
+import com.aventstack.extentreports.ExtentReports;
+import com.aventstack.extentreports.ExtentTest;
+import com.aventstack.extentreports.Status;
+import com.aventstack.extentreports.reporter.ExtentSparkReporter;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.devtools.v112.profiler.model.Profile;
 import org.openqa.selenium.firefox.FirefoxOptions;
@@ -10,12 +14,23 @@ import org.testng.Reporter;
 import org.testng.annotations.*;
 
 import java.io.File;
+import java.util.Date;
 
 public class TestFixture
 {
     private static int screenshotCounter;
     boolean isTakeScreenshot=true;
 
+    private static ExtentReports extent;
+    private static ExtentTest test;
+    private static ITestResult testResult;
+
+    @BeforeSuite
+    public void BeforeSuite(){
+        extent = new ExtentReports();
+        ExtentSparkReporter htmlReporter = new ExtentSparkReporter("./report.html");
+        extent.attachReporter(htmlReporter);
+    }
     @BeforeClass
     public void OneTimeSetUp()
     {
@@ -25,7 +40,6 @@ public class TestFixture
         var size = Driver.Instance.manage().window().getSize();
 
         Driver.Instance.manage().window().maximize();
-        VerificationError.New();
     }
 
     @BeforeMethod
@@ -34,19 +48,40 @@ public class TestFixture
         screenshotCounter = 0;
     }
 
+
     @AfterMethod
-    protected void TearDown()
+    protected void TearDown(ITestResult testResult)
     {
-        if (Driver.Instance != null && Reporter.getCurrentTestResult().getStatus() !=  ITestResult.SUCCESS)
+        this.testResult = testResult;
+        test = extent.createTest("ID:"+testResult.getTestContext().getCurrentXmlTest()+" "+testResult.getName());
+        if (Driver.Instance != null && testResult.getStatus() !=  ITestResult.SUCCESS)
         {
             File fileInfo = Driver.takeSnapshot(null,null);
+            test.addScreenCaptureFromPath(fileInfo.getPath());
         }
+
+        if(testResult.getStatus() ==  ITestResult.FAILURE){
+
+            test.log(Status.INFO,testResult.getThrowable().getMessage());
+            test.log(Status.FAIL, "Test Failed");
+        }
+
+        if(testResult.getStatus() ==  ITestResult.SUCCESS){
+            test.log(Status.PASS, "Test Passed");
+        }
+
+
     }
 
-    @AfterSuite
+    @AfterClass
     protected void OneTimeTearDown()
     {
         Driver.Instance.quit();
+
+    }
+    @AfterSuite
+    public void Aftersuie(){
+        extent.flush();
     }
 
     protected DriverInitializeOptions GetDefaultOptions()
@@ -77,7 +112,7 @@ public class TestFixture
         }
         catch (AssertionError exception)
         {
-            VerificationError.Append("\r\n Exception Message: " + exception.getMessage());
+            //VerificationError.Append("\r\n Exception Message: " + exception.getMessage());
             if (exception.getMessage() != null)
             {
                 VerificationError.Append(exception.getMessage());
@@ -89,7 +124,8 @@ public class TestFixture
 
             if (_isTakeScreenshot)
             {
-                var fileInfo = Driver.takeSnapshot(Reporter.getCurrentTestResult().getName() +"_"+ screenshotCounter++, null);
+                var fileInfo = Driver.takeSnapshot(testResult.getName() +"_"+ screenshotCounter++, null);
+                test.addScreenCaptureFromPath(fileInfo.getPath());
             }
         }
     }
@@ -116,6 +152,7 @@ public class TestFixture
         public static void AssertAll()
         {
             Assert.assertEquals(new StringBuilder().length(), VerificationError.Get().length(), VerificationError.Get().toString());
+
         }
     }
 

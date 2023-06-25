@@ -17,8 +17,11 @@ public class HomePageImpl extends BasePageImpl {
     private static By homePageLogin = By.cssSelector("#login2");
 
     public void login(String usr, String pwd){
+
         Driver.Instance.findElement(homePageLogin).click();
+        Driver.Instance.findElement(userName).clear();
         Driver.Instance.findElement(userName).sendKeys(usr);
+        Driver.Instance.findElement(passWord).clear();
         Driver.Instance.findElement(passWord).sendKeys(pwd);
         Driver.Instance.findElement(loginBtn).click();
     }
